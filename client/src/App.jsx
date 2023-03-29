@@ -1,33 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import io from 'socket.io-client';
+import Chat from "./Components/Chat";
+import { useState, useMemo } from 'react';
+
+const socket = io.connect("http://localhost:3001");
+// const socket = useMemo(() => io('http://localhost:3000'), []);
+
+console.log(socket)
 
 function App() {
-  const [count, setCount] = useState(0)
+  const socket = useMemo(() => io('http://localhost:3001'), []);
+  const [username, setUsername] = useState("");
+  const [room, setRoom] = useState("");
+  const [showChat, setShowChat] = useState(false);
+
+  const joinRoom = () =>{
+    if (username !== "" && room !== "") {
+
+      // socket.emit("join_room", username);
+      socket.emit("join_room", room);
+      setShowChat(true);
+      console.log(`${username} with ID: ${socket.id} joined the room ${room}`)
+    }
+  }
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      {!showChat ? (
+      <div className="joinChatContainer">
+      <h4>Join a Chat</h4>
+      <input type="text" placeholder="Type your username..." onChange={(event) => {setUsername(event.target.value)}}/>
+      <input type="text" placeholder="ROOM ID..." onChange={(event) => {setRoom(event.target.value)}}/>
+      <button onClick={joinRoom}> Join a Room </button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      )
+    : (
+      <Chat socket={socket} username={username} room={room} />
+    )}
     </div>
   )
 }
